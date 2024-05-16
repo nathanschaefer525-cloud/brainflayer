@@ -541,9 +541,8 @@ void usage(unsigned char *name) {
                              labeled with DESCRIPTION,OFFSET\n\
  -T                          don't check if input is a tty\n\
  -k K                        skip the first K lines of input\n\
- -N N                        stop after trying N keys\n\
- -n K/N                      use only the Kth of every N input lines\n\
  -N N                        stop after N input lines or keys\n\
+ -n K/N                      use only the Kth of every N input lines\n\
  -B BATCH_SIZE               batch size for affine transformations\n\
                              must be a power of 2 (default/max: %d)\n\
  -w WINDOW_SIZE              window size for ecmult table (default: 16)\n\
