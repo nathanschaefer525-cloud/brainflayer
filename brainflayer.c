@@ -635,8 +635,8 @@ int main(int argc, char **argv) {
   unsigned char modestr[64];
 
   int spok = 0, aopt = 0, vopt = 0, wopt = 16, xopt = 0;
-  int nopt_mod = 0, nopt_rem = 0, Bopt = 0, Topt = 0, Jopt = -1;
-  uint64_t kopt = 0, Nopt = ~0ULL;
+  int nopt_mod = 0, nopt_rem = 0, Bopt = 0;
+  uint64_t kopt = 0;
   unsigned char *bopt = NULL, *iopt = NULL, *oopt = NULL;
   unsigned char *topt = NULL, *sopt = NULL, *popt = NULL;
   unsigned char *mopt = NULL, *fopt = NULL, *ropt = NULL;
@@ -657,7 +657,7 @@ int main(int argc, char **argv) {
   unsigned char batch_priv[BATCH_MAX][32];
   unsigned char batch_upub[BATCH_MAX][65];
 
-  while ((c = getopt(argc, argv, "avxb:hi:k:f:m:n:o:p:s:r:c:t:w:I:D:S:B:N:J:T")) != -1) {
+  while ((c = getopt(argc, argv, "avxb:hi:k:f:m:n:o:p:s:r:c:t:w:I:B:")) != -1) {
     switch (c) {
       case 'a':
         aopt = 1; // open output file in append mode
@@ -1194,65 +1194,18 @@ int main(int argc, char **argv) {
         // loop over pubkey hash functions
         for (j = 0; pubhashfn[j].fn != NULL; ++j) {
           pubhashfn[j].fn(&hash160, batch_upub[i]);
-
-#if 0
-          if (bloom_chk_hash160(bloom, hash160.ul) == 0) { continue; }
-#else
-          unsigned int bit;
-          bit = BH00(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH01(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH02(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH03(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH04(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH05(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH06(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH07(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH08(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH09(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH10(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH11(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH12(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH13(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH14(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH15(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH16(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH17(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH18(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-          bit = BH19(hash160.ul); if (BLOOM_GET_BIT(bit) == 0) { continue; }
-#endif
-
-          if (!fopt || hsearchf(ffile, &hash160)) {
-#ifndef SHOW_DUPLICATE_HITS
-            // look for duplicates
-            for (k = 0; k < olines; ++k) {
-              if (memcmp(hits + (k*20), &hash160, 20) == 0) {
-                k = -1;
-                break;
-              }
-            }
-            if (k >= 0) {
-#else
-            if (1) {
-#endif//SHOW_DUPLICATE_HITS
+          if (bloom_chk_hash160(bloom, hash160.ul)) {
+            if (!fopt || hsearchf(ffile, &hash160)) {
               if (tty) { fprintf(ofile, "\033[0K"); }
               // reformat/populate the line if required
-              if (Iopt || Dopt) {
+              if (Iopt) {
                 hex(batch_priv[i], 32, batch_line[i], 65);
-              } else if (Sopt) {
-                hex(batch_priv[i], 32, batch_line[i], 65);
-                sprintf(batch_line[i]+64, ":%s,%zu", Sdesc, Slines_last + i);
               }
               fprintresult(ofile, &hash160, pubhashfn[j].id, modestr, batch_line[i]);
-#ifndef SHOW_DUPLICATE_HITS
-              if (k < hits_max) { memcpy(hits + (k*20), &hash160, 20); }
-#endif//SHOW_DUPLICATE_HITS
               ++olines;
             }
-#if 0 // brace balance...
           }
-#else
-          }
-#endif
+          ++j;
         }
       } else { /* generate mode */
         // reformat/populate the line if required
